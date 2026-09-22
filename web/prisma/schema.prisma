@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-// Local SQLite: set provider = "sqlite" and DATABASE_URL="file:./dev.db"
-// Production (Vercel): use PostgreSQL (Prisma Postgres / Neon / Supabase).
+// Fast local SQLite for web/ (not the legacy Flask .db).
+// Temporary / demo data — recreate anytime with: npm run db:setup
 
 model User {
   id           Int       @id @default(autoincrement())

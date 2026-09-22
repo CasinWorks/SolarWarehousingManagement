@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+/** Build web/ for Vercel using a fast temporary SQLite DB (not Flask .db, not Neon). */
+const { execSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+
+const root = path.join(__dirname, "..");
+const env = {
+  ...process.env,
+  DATABASE_URL: process.env.DATABASE_URL || "file:./dev.db",
+};
+
+function run(cmd) {
+  console.log(">", cmd);
+  execSync(cmd, { cwd: root, stdio: "inherit", env });
+}
+
+run("npx prisma generate");
+run("npx prisma db push");
+run("npx tsx prisma/seed.ts");
+
+const src = path.join(root, "prisma", "dev.db");
+const dest = path.join(root, "prisma", "deploy.db");
+if (!fs.existsSync(src)) {
+  console.error("Missing prisma/dev.db after seed");
+  process.exit(1);
+}
+fs.copyFileSync(src, dest);
+console.log("Copied prisma/dev.db → prisma/deploy.db");
+
+run("npx next build");

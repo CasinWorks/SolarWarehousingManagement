@@ -6,27 +6,52 @@ import { format } from "date-fns";
 export default async function DashboardPage() {
   await requireUser();
 
-  const [components, stockSum, receivingCount, drCount, movements, locations] =
+  // Lean queries — avoid loading every stock row into memory twice
+  const [stockSum, receivingCount, drCount, movements, locations, components] =
     await Promise.all([
-      prisma.component.findMany({ include: { stockItems: true } }),
       prisma.stockItem.aggregate({ _sum: { quantity: true } }),
       prisma.receiving.count(),
       prisma.deliveryReceipt.count(),
       prisma.stockMovement.findMany({
         take: 8,
         orderBy: { createdAt: "desc" },
-        include: { component: true, location: true },
+        select: {
+          id: true,
+          movementType: true,
+          quantity: true,
+          createdAt: true,
+          component: { select: { sku: true, name: true } },
+          location: { select: { code: true } },
+        },
       }),
       prisma.location.findMany({
         orderBy: { code: "asc" },
-        include: { stockItems: true },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          capacity: true,
+          stockItems: { select: { quantity: true } },
+        },
+      }),
+      prisma.component.findMany({
+        select: {
+          id: true,
+          sku: true,
+          name: true,
+          reorderLevel: true,
+          stockItems: { select: { quantity: true } },
+        },
       }),
     ]);
 
-  const lowStock = components.filter((c) => {
-    const total = c.stockItems.reduce((s, i) => s + i.quantity, 0);
-    return total <= c.reorderLevel;
-  });
+  const lowStock = components
+    .map((c) => {
+      const total = c.stockItems.reduce((s, i) => s + i.quantity, 0);
+      return { ...c, total };
+    })
+    .filter((c) => c.total <= c.reorderLevel)
+    .slice(0, 12);
 
   const locUsage = locations.map((loc) => {
     const used = loc.stockItems.reduce((s, i) => s + i.quantity, 0);
@@ -115,19 +140,16 @@ export default async function DashboardPage() {
           <div className="card">
             <div className="border-b border-[color:var(--border)] px-4 py-3 font-bold">Low stock alerts</div>
             <ul className="divide-y divide-[color:var(--border)]">
-              {lowStock.map((c) => {
-                const total = c.stockItems.reduce((s, i) => s + i.quantity, 0);
-                return (
-                  <li key={c.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
-                    <span>
-                      {c.sku} · {c.name}
-                    </span>
-                    <span className="pill-low">
-                      {total} / reorder {c.reorderLevel}
-                    </span>
-                  </li>
-                );
-              })}
+              {lowStock.map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
+                  <span>
+                    {c.sku} · {c.name}
+                  </span>
+                  <span className="pill-low">
+                    {c.total} / reorder {c.reorderLevel}
+                  </span>
+                </li>
+              ))}
               {lowStock.length === 0 && (
                 <li className="px-4 py-6 text-center text-sm text-[color:var(--muted)]">
                   All components above reorder level.

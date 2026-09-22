@@ -1,29 +1,26 @@
 # SolarStock Warehouse (TypeScript / Next.js)
 
-On-premise-capable warehouse inventory app, rebuilt for **Vercel** with Next.js + TypeScript.
+Primary app is **`web/`**. Flask prototype is in `/legacy` (optional / reference only).
 
-Flask prototype lives in `/legacy` for reference.
+## Database — fast temporary SQLite in `web/`
 
-## Features
+We are **not** using the old Flask `solar_inventory.db`, and **not** setting up a permanent cloud DB yet.
 
-- Role-based login (`admin` / `manager` / `operator`)
-- Dashboard, bay utilisation, low-stock alerts
-- **Scan In / Scan Out** with phone camera barcode scanning + HID/USB fallback
-- Immediate stock in/out grouped under `RCV-####` / `DR-####`
-- Inventory monitor + movement log
-- Catalog (components, bays, suppliers)
-- Printable Delivery Receipt PDF
-- Branding: SolarStock product · PFS + Powered by CasinWorks in footer
+`web/` uses its own **local SQLite** file (`prisma/dev.db`):
 
-## Local run
+- Fast page loads (no remote DB round-trips)
+- Temporary / disposable — recreate anytime
+- Vercel demo copies that file into `/tmp` at runtime (also temporary)
 
 ```bash
 cd web
-cp .env.example .env   # if needed
+cp .env.example .env
 npm install
-npm run db:setup       # create SQLite DB + demo data
-npm run dev            # http://localhost:3000
+npm run db:setup    # create web SQLite + seed
+npm run dev         # http://localhost:3000
 ```
+
+Do **not** point `DATABASE_URL` at `../solar_inventory.db` or the Flask DB.
 
 ### Demo accounts
 
@@ -33,44 +30,16 @@ npm run dev            # http://localhost:3000
 | manager1 | manager123 | manager |
 | operator1 | operator123 | operator |
 
-## Deploy on Vercel
+## Vercel
 
-SQLite does **not** persist on Vercel. Use Postgres:
+- Root Directory: `web`
+- Env: `AUTH_SECRET`, `COMPANY_NAME`, `COMPANY_ADDRESS`  
+  (`DATABASE_URL` is set at build time to the seeded SQLite file)
+- Permanent Neon/Postgres can wait until you are ready
 
-1. Create a free DB on [Neon](https://neon.tech) (or Vercel Postgres / Supabase).
-2. In `prisma/schema.prisma`, change:
-   ```
-   provider = "postgresql"
-   ```
-3. In Vercel project settings:
-   - **Root Directory:** `web`
-   - Env vars: `DATABASE_URL`, `AUTH_SECRET`, `COMPANY_NAME`, `COMPANY_ADDRESS`
-4. Deploy. Then run seed once (local against prod URL, or Vercel CLI):
-   ```bash
-   DATABASE_URL="postgresql://..." npm run db:seed
-   ```
-
-Generate `AUTH_SECRET`:
-
-```bash
-openssl rand -base64 32
-```
-
-## Security upgrades vs Flask prototype
-
-- Auth.js JWT sessions + httpOnly cookies
-- bcrypt password hashing
-- Zod validation on scan mutations
-- Role checks on server actions / admin routes
-- Secrets via environment variables (no hardcoded production keys)
-
-## Project layout
+## Layout
 
 ```
-web/
-  prisma/           # schema + seed
-  src/app/          # App Router pages + API
-  src/components/   # UI including ScanWorkstation
-  src/lib/          # prisma, stock math, session helpers
-legacy/             # original Flask app
+web/       Next.js app + its own SQLite (primary)
+legacy/    Old Flask app (reference)
 ```
