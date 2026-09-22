@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SolarStock Web — hosted (Supabase) + offline buyoff (local Postgres)
 
-## Getting Started
+## Stack
+- Next.js 15 + Auth.js + Prisma
+- **Now (hosted):** Supabase Postgres via `DATABASE_URL`
+- **Later (offline buyoff):** same app + same schema on local Postgres (`docker compose`)
 
-First, run the development server:
+## Environment
+
+Copy `.env.example` → `.env`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase: Project Settings → Database → Connection string (URI)
+# Use the "Transaction" pooler (port 6543) on Vercel; direct (5432) for migrations/seed.
+DATABASE_URL="postgresql://postgres.[ref]:[PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+AUTH_SECRET="generate-a-long-random-string"
+AUTH_TRUST_HOST=true
+COMPANY_NAME="SolarStock Warehouse"
+COMPANY_ADDRESS="Your warehouse address"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For one-time schema push / seed against Supabase, prefer the **direct** connection (port `5432`) so Prisma migrations work with pgbouncer disabled.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup (hosted / local against Supabase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd web
+npm install
+npx prisma db push
+npm run db:seed
+npm run dev
+```
 
-## Learn More
+Demo logins after seed:
+- `admin` / `admin123`
+- `manager1` / `manager123`
+- `operator1` / `operator123`
 
-To learn more about Next.js, take a look at the following resources:
+## Offline buyoff (client PC)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Same codebase — only `DATABASE_URL` changes:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cd web
+docker compose up -d
+cp .env.offline.example .env   # points at localhost:5432
+npm install
+npm run db:setup               # push schema + seed
+npm run build && npm start     # or npm run dev
+```
 
-## Deploy on Vercel
+### Cutover checklist (Supabase → local PC)
+1. Export data from Supabase (optional): `npx prisma db pull` is schema-only; use `pg_dump` for rows.
+2. On the PC: start Docker Postgres, set `.env` to local URL.
+3. `npx prisma db push` then restore dump, **or** `npm run db:setup` for a fresh demo DB.
+4. Point the app at local URL; no cloud dependency after that.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Vercel
+Root directory: `web`. `DATABASE_URL` must be the Supabase connection string (pooler recommended for serverless).

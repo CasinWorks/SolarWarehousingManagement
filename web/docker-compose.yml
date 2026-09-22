@@ -1,0 +1,28 @@
+# Offline / buyoff local database — same Postgres as Supabase.
+# On the client PC after buyoff:
+#   docker compose up -d
+#   cp .env.offline.example .env
+#   npm run db:setup
+services:
+  db:
+    image: postgres:16-alpine
+    platform: linux/arm64
+    container_name: solarstock-db
+    restart: unless-stopped
+    ports:
+      # Host 5433 avoids clashing with a local Homebrew Postgres on 5432
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: solarstock
+      POSTGRES_PASSWORD: solarstock
+      POSTGRES_DB: solarstock
+    volumes:
+      - solarstock_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solarstock -d solarstock"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  solarstock_pgdata:

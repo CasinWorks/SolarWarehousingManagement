@@ -2,25 +2,23 @@
 
 Primary app is **`web/`**. Flask prototype is in `/legacy` (optional / reference only).
 
-## Database — fast temporary SQLite in `web/`
+## Database
 
-We are **not** using the old Flask `solar_inventory.db`, and **not** setting up a permanent cloud DB yet.
+| Mode | Backend | When |
+|------|---------|------|
+| **Hosted (now)** | Supabase Postgres | Vercel + cloud demo |
+| **Offline buyoff** | Local Postgres (`web/docker-compose.yml`) | Client PC after buyoff |
 
-`web/` uses its own **local SQLite** file (`prisma/dev.db`):
-
-- Fast page loads (no remote DB round-trips)
-- Temporary / disposable — recreate anytime
-- Vercel demo copies that file into `/tmp` at runtime (also temporary)
+Same Prisma schema for both — only `DATABASE_URL` changes. See `web/docs/OFFLINE_MIGRATION.md`.
 
 ```bash
 cd web
-cp .env.example .env
+cp .env.example .env   # paste Supabase URI into DATABASE_URL
 npm install
-npm run db:setup    # create web SQLite + seed
-npm run dev         # http://localhost:3000
+npx prisma db push     # use Direct connection (port 5432), not pooler
+npm run db:seed
+npm run dev            # http://localhost:3000
 ```
-
-Do **not** point `DATABASE_URL` at `../solar_inventory.db` or the Flask DB.
 
 ### Demo accounts
 
@@ -33,13 +31,9 @@ Do **not** point `DATABASE_URL` at `../solar_inventory.db` or the Flask DB.
 ## Vercel
 
 - Root Directory: `web`
-- Env: `AUTH_SECRET`, `COMPANY_NAME`, `COMPANY_ADDRESS`  
-  (`DATABASE_URL` is set at build time to the seeded SQLite file)
-- Permanent Neon/Postgres can wait until you are ready
+- Env: `DATABASE_URL` (Supabase **Transaction** pooler URI + `?pgbouncer=true`), `AUTH_SECRET`, `COMPANY_NAME`, `COMPANY_ADDRESS`
 
 ## Layout
 
-```
-web/       Next.js app + its own SQLite (primary)
-legacy/    Old Flask app (reference)
-```
+- `web/` — Next.js production app
+- `legacy/` — original Flask app (reference)

@@ -11,4 +11,7 @@ web/node_modules/
 web/.next/
 web/prisma/dev.db
 web/prisma/dev.db-journal
+web/prisma/deploy.db
 web/src/generated/
+web/.env
+web/.vercel/

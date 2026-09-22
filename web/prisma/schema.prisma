@@ -2,13 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Hosted now: Supabase Postgres (DATABASE_URL).
+// Offline buyoff later: same schema against local Postgres (see docker-compose.yml).
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-// Fast local SQLite for web/ (not the legacy Flask .db).
-// Temporary / demo data — recreate anytime with: npm run db:setup
 
 model User {
   id           Int       @id @default(autoincrement())
@@ -80,7 +79,7 @@ model StockMovement {
   userId       Int?
   createdAt    DateTime  @default(now())
   component    Component @relation(fields: [componentId], references: [id])
-  location     Location  @relation(fields: [locationId], references: [id])
+  location    Location  @relation(fields: [locationId], references: [id])
   user         User?     @relation(fields: [userId], references: [id])
 }
 

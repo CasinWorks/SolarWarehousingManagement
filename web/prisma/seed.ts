@@ -1,8 +1,6 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../src/lib/prisma";
 import { destackOut, nextRef, stackIn } from "../src/lib/stock";
-
-const prisma = new PrismaClient();
 
 async function main() {
   // Clear in dependency order

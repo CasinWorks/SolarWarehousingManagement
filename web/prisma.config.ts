@@ -8,7 +8,6 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    // Default to fast local SQLite; override with DATABASE_URL when needed
-    url: process.env.DATABASE_URL || "file:./dev.db",
+    url: process.env.DATABASE_URL!,
   },
 });
