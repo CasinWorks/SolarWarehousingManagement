@@ -14,7 +14,18 @@
 }
 
 html {
-  font-size: 17px;
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+/* html5-qrcode video fills the phone viewport nicely */
+.camera-reader video {
+  border-radius: 0.75rem;
 }
 
 body {
