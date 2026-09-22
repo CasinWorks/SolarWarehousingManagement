@@ -8,7 +8,8 @@ import { fileURLToPath } from "url";
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const env = {
   ...process.env,
-  DATABASE_URL: process.env.DATABASE_URL || "file:./dev.db",
+  // Always use local SQLite for this temporary web build (ignore any leftover Postgres URL)
+  DATABASE_URL: "file:./dev.db",
 };
 
 function run(cmd) {
