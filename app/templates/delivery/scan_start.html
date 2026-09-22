@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Scan Out{% endblock %}
+{% block content %}
+<div class="scan-layout">
+  <div class="page-head">
+    <h1 class="section-title mb-0">Scan Out</h1>
+    <a href="{{ url_for('delivery.list_drs') }}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Delivery details</div>
+    <div class="card-body">
+      <p class="help mb-3">Who is this for? Then scan products out of stock. You can print the Delivery Receipt when finished.</p>
+      <form method="post">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Customer Name <span class="text-low">*</span></label>
+            <input name="customer_name" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Project Site</label>
+            <input name="project_site" class="form-control" placeholder="e.g. Batangas Rooftop Array">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Customer Address</label>
+            <input name="customer_address" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Note</label>
+            <input name="note" class="form-control" placeholder="Optional">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-brand btn-touch mt-4 w-100 w-md-auto">
+          <i class="fa-solid fa-barcode me-2"></i>Start Scan Out
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Movement Log{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Movement Log</h4>
+  <div class="btn-group btn-group-sm">
+    <a href="{{ url_for('inventory.movements') }}" class="btn btn-outline-secondary {{ 'active' if not mtype }}">All</a>
+    <a href="{{ url_for('inventory.movements', type='IN') }}" class="btn btn-outline-success {{ 'active' if mtype=='IN' }}">Stack In</a>
+    <a href="{{ url_for('inventory.movements', type='OUT') }}" class="btn btn-outline-danger {{ 'active' if mtype=='OUT' }}">De-stack</a>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0 align-middle">
+      <thead><tr><th>Timestamp</th><th>Type</th><th>Component</th><th>Bay</th><th class="text-end">Qty</th><th>Reference</th><th>By</th><th>Note</th></tr></thead>
+      <tbody>
+      {% for m in moves %}
+        <tr>
+          <td class="small text-muted">{{ m.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>{% if m.movement_type=='IN' %}<span class="pill pill-in">IN</span>{% else %}<span class="pill pill-out">OUT</span>{% endif %}</td>
+          <td class="small"><span class="mono">{{ m.component.sku }}</span> · {{ m.component.name }}</td>
+          <td class="mono small">{{ m.location.code }}</td>
+          <td class="text-end fw-semibold">{{ m.quantity }}</td>
+          <td class="small text-muted">{{ m.reference }}</td>
+          <td class="small">{{ m.user.full_name if m.user else '—' }}</td>
+          <td class="small text-muted">{{ m.note or '' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No movements.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

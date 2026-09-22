@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}New Delivery Receipt{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-file-invoice me-2"></i>New Delivery Receipt</h4>
+  <a href="{{ url_for('delivery.list_drs') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+</div>
+
+<form method="post">
+  <div class="card mb-3">
+    <div class="card-header">Customer &amp; Delivery</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Customer Name <span class="text-danger">*</span></label>
+          <input name="customer_name" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Project Site</label>
+          <input name="project_site" class="form-control" placeholder="e.g. Batangas Rooftop Array">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Customer Address</label>
+          <input name="customer_address" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Note</label>
+          <input name="note" class="form-control" placeholder="Optional">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Items to Deliver</span>
+      <button type="button" class="btn btn-sm btn-outline-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Add line</button>
+    </div>
+    <div class="card-body p-0">
+      <table class="table mb-0 align-middle">
+        <thead><tr><th style="width:44%">Component</th><th style="width:30%">De-stack From Bay</th><th style="width:18%">Qty</th><th></th></tr></thead>
+        <tbody id="lines"></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="help mb-3"><i class="fa-solid fa-circle-info me-1"></i>Stock is de-stacked from the selected bays only when you <strong>Issue</strong> the DR. Saving keeps it as a draft.</p>
+  <button class="btn btn-brand"><i class="fa-solid fa-floppy-disk me-1"></i>Save as Draft</button>
+</form>
+
+<template id="rowtpl">
+  <tr class="line-row">
+    <td>
+      <select name="component_id" class="form-select form-select-sm" required>
+        <option value="">— Component —</option>
+        {% for c in components %}<option value="{{ c.id }}">{{ c.sku }} · {{ c.name }} (stock: {{ c.total_stock }})</option>{% endfor %}
+      </select>
+    </td>
+    <td>
+      <select name="location_id" class="form-select form-select-sm" required>
+        <option value="">— Bay —</option>
+        {% for l in locations %}<option value="{{ l.id }}">{{ l.code }} — {{ l.name }}</option>{% endfor %}
+      </select>
+    </td>
+    <td><input type="number" name="quantity" min="1" class="form-control form-control-sm" required></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>
+</template>
+{% endblock %}
+{% block scripts %}
+<script>
+  function addRow() {
+    document.getElementById('lines').appendChild(document.getElementById('rowtpl').content.cloneNode(true));
+  }
+  addRow();
+</script>
+{% endblock %}

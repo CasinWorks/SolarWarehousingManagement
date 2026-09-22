@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Suppliers{% endblock %}
+{% block content %}
+<div class="page-head"><h4 class="section-title mb-0"><i class="fa-solid fa-industry me-2"></i>Suppliers</h4></div>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card"><div class="card-body p-0">
+      <table class="table mb-0 align-middle">
+        <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th></tr></thead>
+        <tbody>
+        {% for s in suppliers %}
+          <tr><td class="fw-semibold">{{ s.name }}</td><td class="small">{{ s.contact_person or '—' }}</td><td class="small">{{ s.phone or '—' }}</td><td class="small">{{ s.email or '—' }}</td></tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center text-muted py-4">No suppliers yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+  {% if current_user.is_manager %}
+  <div class="col-lg-4">
+    <div class="card"><div class="card-header">Add Supplier</div><div class="card-body">
+      <form method="post" action="{{ url_for('catalog.create_supplier') }}">
+        <div class="mb-2"><label class="form-label">Name</label><input name="name" class="form-control form-control-sm" required></div>
+        <div class="mb-2"><label class="form-label">Contact Person</label><input name="contact_person" class="form-control form-control-sm"></div>
+        <div class="mb-2"><label class="form-label">Phone</label><input name="phone" class="form-control form-control-sm"></div>
+        <div class="mb-2"><label class="form-label">Email</label><input name="email" type="email" class="form-control form-control-sm"></div>
+        <button class="btn btn-brand btn-sm w-100 mt-2">Add</button>
+      </form>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

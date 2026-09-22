@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Inventory Monitor{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-layer-group me-2"></i>Stacking / De-stacking Monitor</h4>
+  <div>
+    <a href="{{ url_for('inventory.adjust') }}" class="btn btn-brand btn-sm"><i class="fa-solid fa-right-left me-1"></i>Stack / De-stack</a>
+    <a href="{{ url_for('inventory.movements') }}" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-clock-rotate-left me-1"></i>Movement Log</a>
+  </div>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-5"><input name="q" value="{{ q }}" class="form-control" placeholder="Search SKU or name…"></div>
+  <div class="col-md-3">
+    <select name="category" class="form-select">
+      <option value="">All categories</option>
+      {% for c in categories %}<option value="{{ c }}" {{ 'selected' if c==category }}>{{ c }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-outline-success w-100">Filter</button></div>
+</form>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table mb-0 align-middle">
+      <thead><tr><th>Component</th><th>Category</th><th class="text-end">Total</th><th>Stacked in bays</th><th></th></tr></thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>
+          <td><span class="mono">{{ row.component.sku }}</span> · {{ row.component.name }}</td>
+          <td class="small text-muted">{{ row.component.category or '—' }}</td>
+          <td class="text-end">
+            <span class="fw-bold {{ 'text-low' if row.low else 'text-ok' }}">{{ row.total }}</span>
+            <span class="text-muted small">{{ row.component.unit }}</span>
+            {% if row.low %}<span class="pill pill-low ms-1">LOW</span>{% endif %}
+          </td>
+          <td>
+            {% for si in row.locations %}
+              <span class="badge bg-light text-dark border me-1 mb-1"><span class="mono">{{ si.location.code }}</span>: {{ si.quantity }}</span>
+            {% else %}
+              <span class="text-muted small">—</span>
+            {% endfor %}
+          </td>
+          <td class="text-end"><a href="{{ url_for('inventory.adjust') }}" class="btn btn-sm btn-outline-secondary">Move</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No components match.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

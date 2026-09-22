@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Stack / De-stack{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-right-left me-2"></i>Manual Stack / De-stack</h4>
+  <a href="{{ url_for('inventory.monitor') }}" class="btn btn-outline-secondary btn-sm">Back to monitor</a>
+</div>
+
+<div class="card" style="max-width:640px">
+  <div class="card-body">
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">Action</label>
+        <select name="action" id="action" class="form-select" onchange="toggleDest()">
+          <option value="stack">Stack In (add units to a bay)</option>
+          <option value="destack">De-stack Out (remove units from a bay)</option>
+          <option value="transfer">Transfer (move between bays)</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Component</label>
+        <select name="component_id" class="form-select" required>
+          <option value="">— Select —</option>
+          {% for c in components %}<option value="{{ c.id }}">{{ c.sku }} · {{ c.name }} (in stock: {{ c.total_stock }})</option>{% endfor %}
+        </select>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="form-label" id="srcLabel">Bay</label>
+          <select name="location_id" class="form-select" required>
+            <option value="">— Bay —</option>
+            {% for l in locations %}<option value="{{ l.id }}">{{ l.code }} — {{ l.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 d-none" id="destWrap">
+          <label class="form-label">Destination Bay</label>
+          <select name="dest_location_id" class="form-select">
+            <option value="">— Bay —</option>
+            {% for l in locations %}<option value="{{ l.id }}">{{ l.code }} — {{ l.name }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row g-3 mt-0">
+        <div class="col-sm-4">
+          <label class="form-label">Quantity</label>
+          <input type="number" name="quantity" min="1" class="form-control" required>
+        </div>
+        <div class="col-sm-8">
+          <label class="form-label">Note</label>
+          <input name="note" class="form-control" placeholder="Optional">
+        </div>
+      </div>
+      <button class="btn btn-brand mt-4"><i class="fa-solid fa-check me-1"></i>Apply</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  function toggleDest() {
+    const a = document.getElementById('action').value;
+    const wrap = document.getElementById('destWrap');
+    const dest = document.querySelector('[name=dest_location_id]');
+    const isXfer = a === 'transfer';
+    wrap.classList.toggle('d-none', !isXfer);
+    dest.required = isXfer;
+    document.getElementById('srcLabel').textContent = isXfer ? 'Source Bay' : 'Bay';
+  }
+  toggleDest();
+</script>
+{% endblock %}

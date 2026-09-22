@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1 class="section-title mb-0">Warehouse Dashboard</h1>
+  <div class="cta-row">
+    <a href="{{ url_for('receiving.scan_start') }}" class="btn btn-ok"><i class="fa-solid fa-barcode me-2"></i>Scan In</a>
+    <a href="{{ url_for('delivery.scan_start') }}" class="btn btn-brand"><i class="fa-solid fa-barcode me-2"></i>Scan Out</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card"><div class="card-body d-flex justify-content-between align-items-center">
+      <div><div class="stat-value">{{ total_units }}</div><div class="stat-label">Units in stock</div></div>
+      <i class="fa-solid fa-boxes-stacked stat-icon"></i>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card"><div class="card-body d-flex justify-content-between align-items-center">
+      <div><div class="stat-value">{{ total_skus }}</div><div class="stat-label">Component SKUs</div></div>
+      <i class="fa-solid fa-solar-panel stat-icon"></i>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card"><div class="card-body d-flex justify-content-between align-items-center">
+      <div><div class="stat-value">{{ receivings }}</div><div class="stat-label">Receivings</div></div>
+      <i class="fa-solid fa-truck-ramp-box stat-icon"></i>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card"><div class="card-body d-flex justify-content-between align-items-center">
+      <div><div class="stat-value">{{ drs }}</div><div class="stat-label">Delivery Receipts</div></div>
+      <i class="fa-solid fa-file-invoice stat-icon"></i>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Recent stacking / de-stacking</span>
+        <a href="{{ url_for('inventory.movements') }}" class="small">View all</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table mb-0 align-middle">
+          <thead><tr><th>When</th><th>Type</th><th>Component</th><th>Bay</th><th class="text-end">Qty</th><th>Ref</th></tr></thead>
+          <tbody>
+          {% for m in recent_moves %}
+            <tr>
+              <td class="small text-muted">{{ m.created_at.strftime('%b %d %H:%M') }}</td>
+              <td>{% if m.movement_type=='IN' %}<span class="pill pill-in">IN</span>{% else %}<span class="pill pill-out">OUT</span>{% endif %}</td>
+              <td>{{ m.component.sku }} · {{ m.component.name }}</td>
+              <td class="mono">{{ m.location.code }}</td>
+              <td class="text-end fw-bold">{{ m.quantity }}</td>
+              <td class="small text-muted">{{ m.reference }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-4">No movements yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header"><i class="fa-solid fa-triangle-exclamation me-2 text-low"></i>Low stock alerts</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+        {% for c in low_stock %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ c.sku }} · {{ c.name }}</span>
+            <span class="pill pill-low">{{ c.total_stock }} / reorder {{ c.reorder_level }}</span>
+          </li>
+        {% else %}
+          <li class="list-group-item text-muted text-center py-3">All components above reorder level.</li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Bay utilisation</div>
+      <div class="card-body">
+        {% for u in loc_usage %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between">
+            <span class="mono fw-semibold">{{ u.loc.code }} <span class="fw-normal text-muted">{{ u.loc.name }}</span></span>
+            <span class="text-muted">{{ u.used }}{% if u.loc.capacity %} / {{ u.loc.capacity }}{% endif %}</span>
+          </div>
+          <div class="cap-bar mt-1">
+            <div class="cap-fill {{ 'full' if u.pct>=90 else '' }}" style="width: {{ u.pct }}%"></div>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-muted">No locations defined.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

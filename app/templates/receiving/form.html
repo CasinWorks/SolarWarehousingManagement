@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}New Receiving{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-truck-ramp-box me-2"></i>New Receiving</h4>
+  <a href="{{ url_for('receiving.list_receivings') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+</div>
+
+<form method="post">
+  <div class="card mb-3">
+    <div class="card-header">Header</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label">Supplier</label>
+          <select name="supplier_id" class="form-select">
+            <option value="">— Select supplier —</option>
+            {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">PO Number</label>
+          <input name="po_number" class="form-control" placeholder="PO-1234">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Note</label>
+          <input name="note" class="form-control" placeholder="Optional">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Line Items</span>
+      <button type="button" class="btn btn-sm btn-outline-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Add line</button>
+    </div>
+    <div class="card-body p-0">
+      <table class="table mb-0 align-middle">
+        <thead><tr><th style="width:38%">Component</th><th style="width:26%">Stack Location</th><th style="width:14%">Qty</th><th style="width:16%">Condition</th><th></th></tr></thead>
+        <tbody id="lines"></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="help mb-3"><i class="fa-solid fa-circle-info me-1"></i>Items marked <strong>GOOD</strong> are stacked into inventory when you post the receiving. <strong>DAMAGED</strong> items are recorded but not stacked.</p>
+  <button class="btn btn-brand"><i class="fa-solid fa-floppy-disk me-1"></i>Save as Draft</button>
+</form>
+
+<template id="rowtpl">
+  <tr class="line-row">
+    <td>
+      <select name="component_id" class="form-select form-select-sm" required>
+        <option value="">— Component —</option>
+        {% for c in components %}<option value="{{ c.id }}">{{ c.sku }} · {{ c.name }}</option>{% endfor %}
+      </select>
+    </td>
+    <td>
+      <select name="location_id" class="form-select form-select-sm" required>
+        <option value="">— Bay —</option>
+        {% for l in locations %}<option value="{{ l.id }}">{{ l.code }} — {{ l.name }}</option>{% endfor %}
+      </select>
+    </td>
+    <td><input type="number" name="quantity" min="1" class="form-control form-control-sm" required></td>
+    <td>
+      <select name="condition" class="form-select form-select-sm">
+        <option value="GOOD">Good</option><option value="DAMAGED">Damaged</option>
+      </select>
+    </td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>
+</template>
+{% endblock %}
+{% block scripts %}
+<script>
+  function addRow() {
+    const tpl = document.getElementById('rowtpl');
+    document.getElementById('lines').appendChild(tpl.content.cloneNode(true));
+  }
+  addRow();
+</script>
+{% endblock %}

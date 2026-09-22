@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ dr.dr_no }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-file-invoice me-2"></i>{{ dr.dr_no }}
+    <span class="pill pill-{{ dr.status|lower }} ms-2">{{ dr.status }}</span></h4>
+  <div>
+    <a href="{{ url_for('delivery.list_drs') }}" class="btn btn-outline-secondary btn-sm">Back</a>
+    <a href="{{ url_for('delivery.dr_pdf', dr_id=dr.id) }}" target="_blank" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-file-pdf me-1"></i>PDF</a>
+    {% if dr.note == 'Scan Out' or (dr.note and 'Scan Out' in dr.note) %}
+    <a href="{{ url_for('delivery.scan_session', dr_id=dr.id) }}" class="btn btn-brand btn-sm"><i class="fa-solid fa-barcode me-1"></i>Continue Scan</a>
+    {% endif %}
+    {% if dr.status == 'DRAFT' %}
+    <form method="post" action="{{ url_for('delivery.issue_dr', dr_id=dr.id) }}" class="d-inline"
+          onsubmit="return confirm('Issue this DR and de-stack the items from inventory?');">
+      <button class="btn btn-brand btn-sm"><i class="fa-solid fa-paper-plane me-1"></i>Issue &amp; De-stack</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-8"><div class="card h-100"><div class="card-body">
+    <div class="row g-3">
+      <div class="col-sm-6"><div class="stat-label">Customer</div><div class="fw-semibold">{{ dr.customer_name }}</div></div>
+      <div class="col-sm-6"><div class="stat-label">Project Site</div><div>{{ dr.project_site or '—' }}</div></div>
+      <div class="col-sm-6"><div class="stat-label">Address</div><div>{{ dr.customer_address or '—' }}</div></div>
+      <div class="col-sm-3"><div class="stat-label">Date</div><div>{{ dr.delivery_date.strftime('%b %d, %Y') }}</div></div>
+      <div class="col-sm-3"><div class="stat-label">Prepared by</div><div>{{ dr.preparer.full_name if dr.preparer else '—' }}</div></div>
+    </div>
+    {% if dr.note %}<div class="mt-3"><div class="stat-label">Note</div><div>{{ dr.note }}</div></div>{% endif %}
+  </div></div></div>
+  <div class="col-md-4"><div class="card h-100"><div class="card-body text-center d-flex flex-column justify-content-center">
+    <div class="stat-value text-success">{{ dr.total_qty }}</div>
+    <div class="stat-label">Total units</div>
+  </div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">Items</div>
+  <div class="card-body p-0">
+    <table class="table mb-0 align-middle">
+      <thead><tr><th>Component</th><th>Bay</th><th class="text-end">Qty</th>{% if dr.status=='DRAFT' %}<th class="text-end">Available now</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for it in dr.items %}
+        <tr>
+          <td><span class="mono">{{ it.component.sku }}</span> · {{ it.component.name }}</td>
+          <td class="mono">{{ it.location.code }}</td>
+          <td class="text-end fw-semibold">{{ it.quantity }}</td>
+          {% if dr.status=='DRAFT' %}
+          <td class="text-end">
+            {% set a = avail[it.id] %}
+            <span class="{{ 'text-danger fw-bold' if a < it.quantity else 'text-success' }}">{{ a }}</span>
+            {% if a < it.quantity %}<i class="fa-solid fa-triangle-exclamation text-danger ms-1" title="Not enough stock"></i>{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Scan In{% endblock %}
+{% block content %}
+<div class="scan-layout">
+  <div class="page-head">
+    <h1 class="section-title mb-0">Scan In</h1>
+    <a href="{{ url_for('receiving.list_receivings') }}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Start receiving</div>
+    <div class="card-body">
+      <p class="help mb-3">Optional header details — then scan products straight into stock.</p>
+      <form method="post">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label">Supplier</label>
+            <select name="supplier_id" class="form-select">
+              <option value="">— Optional —</option>
+              {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">PO Number</label>
+            <input name="po_number" class="form-control" placeholder="PO-1234">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Note</label>
+            <input name="note" class="form-control" placeholder="Optional">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-ok btn-touch mt-4 w-100 w-md-auto">
+          <i class="fa-solid fa-barcode me-2"></i>Start Scan In
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

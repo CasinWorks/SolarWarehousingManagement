@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Locations{% endblock %}
+{% block content %}
+<div class="page-head"><h4 class="section-title mb-0"><i class="fa-solid fa-warehouse me-2"></i>Stacking Locations</h4></div>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card"><div class="card-body p-0">
+      <table class="table mb-0 align-middle">
+        <thead><tr><th>Code</th><th>Name</th><th>Zone</th><th class="text-end">Capacity</th></tr></thead>
+        <tbody>
+        {% for l in locations %}
+          <tr><td class="mono fw-semibold">{{ l.code }}</td><td>{{ l.name }}</td><td class="small text-muted">{{ l.zone or '—' }}</td><td class="text-end">{{ l.capacity or '—' }}</td></tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center text-muted py-4">No locations yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+  {% if current_user.is_manager %}
+  <div class="col-lg-4">
+    <div class="card"><div class="card-header">Add Location</div><div class="card-body">
+      <form method="post" action="{{ url_for('catalog.create_location') }}">
+        <div class="mb-2"><label class="form-label">Code</label><input name="code" class="form-control form-control-sm" placeholder="A-01" required></div>
+        <div class="mb-2"><label class="form-label">Name</label><input name="name" class="form-control form-control-sm" required></div>
+        <div class="mb-2"><label class="form-label">Zone</label><input name="zone" class="form-control form-control-sm" placeholder="Zone A"></div>
+        <div class="mb-2"><label class="form-label">Capacity (units)</label><input type="number" name="capacity" min="0" value="0" class="form-control form-control-sm"></div>
+        <button class="btn btn-brand btn-sm w-100 mt-2">Add</button>
+      </form>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

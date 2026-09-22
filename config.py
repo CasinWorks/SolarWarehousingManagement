@@ -1,0 +1,15 @@
+import os
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+class Config:
+    SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-in-production-solar-2026")
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL", "sqlite:///" + os.path.join(BASE_DIR, "solar_inventory.db")
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    COMPANY_NAME = os.environ.get("COMPANY_NAME", "PFS Automation Microsystems")
+    COMPANY_ADDRESS = os.environ.get(
+        "COMPANY_ADDRESS", "Km 22 Industrial Ave., Laguna, Philippines"
+    )

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Components{% endblock %}
+{% block content %}
+<div class="page-head"><h4 class="section-title mb-0"><i class="fa-solid fa-solar-panel me-2"></i>Component Catalog</h4></div>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card"><div class="card-body p-0">
+      <table class="table mb-0 align-middle">
+        <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Unit</th><th class="text-end">In Stock</th><th class="text-end">Reorder</th></tr></thead>
+        <tbody>
+        {% for c in components %}
+          <tr>
+            <td class="mono fw-semibold">{{ c.sku }}</td>
+            <td>{{ c.name }}</td>
+            <td class="small text-muted">{{ c.category or '—' }}</td>
+            <td class="small">{{ c.unit }}</td>
+            <td class="text-end {{ 'text-danger fw-bold' if c.below_reorder else '' }}">{{ c.total_stock }}</td>
+            <td class="text-end small text-muted">{{ c.reorder_level }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No components yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+  {% if current_user.is_manager %}
+  <div class="col-lg-4">
+    <div class="card"><div class="card-header">Add Component</div><div class="card-body">
+      <form method="post" action="{{ url_for('catalog.create_component') }}">
+        <div class="mb-2"><label class="form-label">SKU</label><input name="sku" class="form-control form-control-sm" required></div>
+        <div class="mb-2"><label class="form-label">Name</label><input name="name" class="form-control form-control-sm" required></div>
+        <div class="mb-2"><label class="form-label">Category</label>
+          <input name="category" class="form-control form-control-sm" list="cats" placeholder="Panel, Inverter…">
+          <datalist id="cats"><option>Panel</option><option>Inverter</option><option>Battery</option><option>Mounting</option><option>Cable</option><option>Accessory</option></datalist>
+        </div>
+        <div class="row g-2">
+          <div class="col-6 mb-2"><label class="form-label">Unit</label><input name="unit" value="pc" class="form-control form-control-sm"></div>
+          <div class="col-6 mb-2"><label class="form-label">Reorder</label><input type="number" name="reorder_level" value="0" min="0" class="form-control form-control-sm"></div>
+        </div>
+        <button class="btn btn-brand btn-sm w-100 mt-2">Add</button>
+      </form>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

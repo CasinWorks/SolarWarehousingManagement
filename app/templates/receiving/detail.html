@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ rcv.ref_no }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h4 class="section-title mb-0"><i class="fa-solid fa-truck-ramp-box me-2"></i>{{ rcv.ref_no }}
+    <span class="pill pill-{{ rcv.status|lower }} ms-2">{{ rcv.status }}</span></h4>
+  <div>
+    <a href="{{ url_for('receiving.list_receivings') }}" class="btn btn-outline-secondary btn-sm">Back</a>
+    {% if rcv.note == 'Scan In' or (rcv.note and 'Scan In' in rcv.note) %}
+    <a href="{{ url_for('receiving.scan_session', rcv_id=rcv.id) }}" class="btn btn-ok btn-sm"><i class="fa-solid fa-barcode me-1"></i>Continue Scan</a>
+    {% endif %}
+    {% if rcv.status == 'DRAFT' %}
+    <form method="post" action="{{ url_for('receiving.post_receiving', rcv_id=rcv.id) }}" class="d-inline"
+          onsubmit="return confirm('Post this receiving and stack all GOOD items into inventory?');">
+      <button class="btn btn-brand btn-sm"><i class="fa-solid fa-check me-1"></i>Post &amp; Stack</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-8"><div class="card h-100"><div class="card-body">
+    <div class="row">
+      <div class="col-sm-4"><div class="stat-label">Supplier</div><div>{{ rcv.supplier.name if rcv.supplier else '—' }}</div></div>
+      <div class="col-sm-4"><div class="stat-label">PO Number</div><div>{{ rcv.po_number or '—' }}</div></div>
+      <div class="col-sm-4"><div class="stat-label">Received</div><div>{{ rcv.received_date.strftime('%b %d, %Y %H:%M') }}</div></div>
+    </div>
+    {% if rcv.note %}<div class="mt-3"><div class="stat-label">Note</div><div>{{ rcv.note }}</div></div>{% endif %}
+    <div class="mt-3"><div class="stat-label">Created by</div><div>{{ rcv.creator.full_name if rcv.creator else '—' }}</div></div>
+  </div></div></div>
+  <div class="col-md-4"><div class="card h-100"><div class="card-body text-center d-flex flex-column justify-content-center">
+    <div class="stat-value text-success">{{ rcv.total_qty }}</div>
+    <div class="stat-label">Total units received</div>
+  </div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">Items</div>
+  <div class="card-body p-0">
+    <table class="table mb-0 align-middle">
+      <thead><tr><th>Component</th><th>Bay</th><th class="text-end">Qty</th><th>Condition</th></tr></thead>
+      <tbody>
+      {% for it in rcv.items %}
+        <tr>
+          <td><span class="mono">{{ it.component.sku }}</span> · {{ it.component.name }}</td>
+          <td class="mono">{{ it.location.code }}</td>
+          <td class="text-end fw-semibold">{{ it.quantity }}</td>
+          <td>{% if it.condition=='GOOD' %}<span class="pill pill-in">GOOD</span>{% else %}<span class="pill pill-low">DAMAGED</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
