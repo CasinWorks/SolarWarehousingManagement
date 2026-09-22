@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// For Vercel production: switch provider to "postgresql" and set DATABASE_URL
-// to a Neon / Vercel Postgres / Supabase connection string.
+// Local SQLite: set provider = "sqlite" and DATABASE_URL="file:./dev.db"
+// Production (Vercel): use PostgreSQL (Prisma Postgres / Neon / Supabase).
 
 model User {
   id           Int       @id @default(autoincrement())
