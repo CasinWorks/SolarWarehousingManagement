@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /** Build web/ for Vercel using a fast temporary SQLite DB (not Flask .db, not Neon). */
-const { execSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
+import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const root = path.join(__dirname, "..");
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const env = {
   ...process.env,
   DATABASE_URL: process.env.DATABASE_URL || "file:./dev.db",
