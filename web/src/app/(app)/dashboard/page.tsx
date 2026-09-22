@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
 import { format } from "date-fns";
 
 export default async function DashboardPage() {
-  await requireUser();
+  // Layout already auth-gates — skip duplicate session work
 
-  // Lean queries — avoid loading every stock row into memory twice
-  const [stockSum, receivingCount, drCount, movements, locations, components] =
+  const [stockSum, receivingCount, drCount, skuCount, movements, locations, lowStock] =
     await Promise.all([
       prisma.stockItem.aggregate({ _sum: { quantity: true } }),
       prisma.receiving.count(),
       prisma.deliveryReceipt.count(),
+      prisma.component.count(),
       prisma.stockMovement.findMany({
         take: 8,
         orderBy: { createdAt: "desc" },
@@ -34,24 +33,19 @@ export default async function DashboardPage() {
           stockItems: { select: { quantity: true } },
         },
       }),
-      prisma.component.findMany({
-        select: {
-          id: true,
-          sku: true,
-          name: true,
-          reorderLevel: true,
-          stockItems: { select: { quantity: true } },
-        },
-      }),
+      prisma.$queryRaw<
+        { id: number; sku: string; name: string; reorderLevel: number; total: bigint }[]
+      >`
+        SELECT c.id, c.sku, c.name, c."reorderLevel",
+               COALESCE(SUM(s.quantity), 0)::bigint AS total
+        FROM "Component" c
+        LEFT JOIN "StockItem" s ON s."componentId" = c.id
+        GROUP BY c.id
+        HAVING COALESCE(SUM(s.quantity), 0) <= c."reorderLevel"
+        ORDER BY total ASC
+        LIMIT 12
+      `,
     ]);
-
-  const lowStock = components
-    .map((c) => {
-      const total = c.stockItems.reduce((s, i) => s + i.quantity, 0);
-      return { ...c, total };
-    })
-    .filter((c) => c.total <= c.reorderLevel)
-    .slice(0, 12);
 
   const locUsage = locations.map((loc) => {
     const used = loc.stockItems.reduce((s, i) => s + i.quantity, 0);
@@ -64,10 +58,10 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Warehouse Dashboard</h1>
         <div className="flex flex-wrap gap-2">
-          <Link href="/receiving/scan" className="btn-ok">
+          <Link href="/receiving/scan" className="btn-ok" prefetch>
             Scan In
           </Link>
-          <Link href="/delivery/scan" className="btn-amber">
+          <Link href="/delivery/scan" className="btn-amber" prefetch>
             Scan Out
           </Link>
         </div>
@@ -76,7 +70,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { label: "Units in stock", value: stockSum._sum.quantity ?? 0 },
-          { label: "Component SKUs", value: components.length },
+          { label: "Component SKUs", value: skuCount },
           { label: "Receivings", value: receivingCount },
           { label: "Delivery Receipts", value: drCount },
         ].map((s) => (
@@ -91,7 +85,7 @@ export default async function DashboardPage() {
         <div className="card lg:col-span-3">
           <div className="flex items-center justify-between border-b border-[color:var(--border)] px-4 py-3 font-bold">
             <span>Recent stacking / de-stacking</span>
-            <Link href="/inventory/movements" className="text-sm font-normal text-[color:var(--muted)]">
+            <Link href="/inventory/movements" className="text-sm font-normal text-[color:var(--muted)]" prefetch>
               View all
             </Link>
           </div>
@@ -146,7 +140,7 @@ export default async function DashboardPage() {
                     {c.sku} · {c.name}
                   </span>
                   <span className="pill-low">
-                    {c.total} / reorder {c.reorderLevel}
+                    {Number(c.total)} / reorder {c.reorderLevel}
                   </span>
                 </li>
               ))}

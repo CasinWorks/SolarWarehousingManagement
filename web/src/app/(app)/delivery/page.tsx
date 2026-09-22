@@ -1,20 +1,27 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
 import { format } from "date-fns";
 
 export default async function DeliveryListPage() {
-  await requireUser();
   const rows = await prisma.deliveryReceipt.findMany({
     orderBy: { createdAt: "desc" },
-    include: { items: true },
+    take: 100,
+    select: {
+      id: true,
+      drNo: true,
+      customerName: true,
+      projectSite: true,
+      deliveryDate: true,
+      status: true,
+      items: { select: { quantity: true } },
+    },
   });
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Delivery Receipts</h1>
-        <Link href="/delivery/scan" className="btn-amber">
+        <Link href="/delivery/scan" className="btn-amber" prefetch>
           Scan Out
         </Link>
       </div>
@@ -48,7 +55,7 @@ export default async function DeliveryListPage() {
                   <Link href={`/api/delivery/${d.id}/pdf`} className="btn-outline !min-h-9 !py-1 text-xs" target="_blank">
                     PDF
                   </Link>
-                  <Link href={`/delivery/scan/${d.id}`} className="btn-outline ml-1 !min-h-9 !py-1 text-xs">
+                  <Link href={`/delivery/scan/${d.id}`} className="btn-outline ml-1 !min-h-9 !py-1 text-xs" prefetch>
                     Open
                   </Link>
                 </td>

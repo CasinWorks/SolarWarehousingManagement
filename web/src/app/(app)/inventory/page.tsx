@@ -1,47 +1,46 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
 
 export default async function InventoryPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  await requireUser();
   const sp = await searchParams;
   const q = (sp.q || "").trim();
   const category = (sp.category || "").trim();
 
-  const components = await prisma.component.findMany({
-    where: {
-      AND: [
-        q
-          ? {
-              OR: [
-                { name: { contains: q } },
-                { sku: { contains: q } },
-              ],
-            }
-          : {},
-        category ? { category } : {},
-      ],
-    },
-    orderBy: [{ category: "asc" }, { name: "asc" }],
-    include: {
-      stockItems: {
-        where: { quantity: { gt: 0 } },
-        include: { location: true },
+  const [components, categoryRows] = await Promise.all([
+    prisma.component.findMany({
+      where: {
+        AND: [
+          q
+            ? {
+                OR: [
+                  { name: { contains: q, mode: "insensitive" } },
+                  { sku: { contains: q, mode: "insensitive" } },
+                ],
+              }
+            : {},
+          category ? { category } : {},
+        ],
       },
-    },
-  });
-
-  const categories = (
-    await prisma.component.findMany({
+      orderBy: [{ category: "asc" }, { name: "asc" }],
+      include: {
+        stockItems: {
+          where: { quantity: { gt: 0 } },
+          include: { location: { select: { code: true } } },
+        },
+      },
+    }),
+    prisma.component.findMany({
       where: { category: { not: null } },
       distinct: ["category"],
       select: { category: true },
-    })
-  )
+    }),
+  ]);
+
+  const categories = categoryRows
     .map((c) => c.category!)
     .filter(Boolean)
     .sort();

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { destackOut, InsufficientStock, nextRef, stackIn } from "@/lib/stock";
+import { findComponentBySku } from "@/lib/components";
 
 export async function startScanIn(formData: FormData) {
   const user = await requireUser();
@@ -42,15 +43,7 @@ export async function addScanInItem(rcvId: number, formData: FormData) {
   }
 
   const rcv = await prisma.receiving.findUniqueOrThrow({ where: { id: rcvId } });
-  const component = await prisma.component.findFirst({
-    where: { sku: { equals: parsed.data.sku } },
-  });
-  // SQLite case-insensitive fallback
-  const comp =
-    component ||
-    (await prisma.component.findMany()).find(
-      (c) => c.sku.toLowerCase() === parsed.data.sku.toLowerCase(),
-    );
+  const comp = await findComponentBySku(parsed.data.sku);
   if (!comp) redirect(`/receiving/scan/${rcvId}?error=SKU+not+found`);
 
   await prisma.receivingItem.create({
@@ -119,8 +112,7 @@ export async function addScanOutItem(drId: number, formData: FormData) {
   if (!parsed.success) redirect(`/delivery/scan/${drId}?error=Invalid+input`);
 
   const dr = await prisma.deliveryReceipt.findUniqueOrThrow({ where: { id: drId } });
-  const all = await prisma.component.findMany();
-  const comp = all.find((c) => c.sku.toLowerCase() === parsed.data.sku.toLowerCase());
+  const comp = await findComponentBySku(parsed.data.sku);
   if (!comp) redirect(`/delivery/scan/${drId}?error=SKU+not+found`);
 
   try {

@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
 import { format } from "date-fns";
 
 export default async function ReceivingListPage() {
-  await requireUser();
   const rows = await prisma.receiving.findMany({
     orderBy: { createdAt: "desc" },
-    include: { supplier: true, items: true },
+    take: 100,
+    select: {
+      id: true,
+      refNo: true,
+      poNumber: true,
+      status: true,
+      receivedAt: true,
+      supplier: { select: { name: true } },
+      items: { select: { quantity: true } },
+    },
   });
 
   return (
@@ -15,7 +22,7 @@ export default async function ReceivingListPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Receiving</h1>
         <div className="flex gap-2">
-          <Link href="/receiving/scan" className="btn-ok">
+          <Link href="/receiving/scan" className="btn-ok" prefetch>
             Scan In
           </Link>
         </div>
@@ -36,7 +43,7 @@ export default async function ReceivingListPage() {
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-[color:var(--border)]">
                 <td className="px-3 py-2 font-mono font-bold">
-                  <Link href={`/receiving/scan/${r.id}`} className="underline-offset-2 hover:underline">
+                  <Link href={`/receiving/scan/${r.id}`} className="underline-offset-2 hover:underline" prefetch>
                     {r.refNo}
                   </Link>
                 </td>

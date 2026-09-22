@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
 import { format } from "date-fns";
 
 export default async function MovementsPage({
@@ -8,14 +7,22 @@ export default async function MovementsPage({
 }: {
   searchParams: Promise<{ type?: string }>;
 }) {
-  await requireUser();
   const sp = await searchParams;
   const type = sp.type === "IN" || sp.type === "OUT" ? sp.type : undefined;
   const moves = await prisma.stockMovement.findMany({
     where: type ? { movementType: type } : undefined,
     orderBy: { createdAt: "desc" },
-    take: 200,
-    include: { component: true, location: true, user: true },
+    take: 100,
+    select: {
+      id: true,
+      movementType: true,
+      quantity: true,
+      reference: true,
+      createdAt: true,
+      component: { select: { sku: true, name: true } },
+      location: { select: { code: true } },
+      user: { select: { fullName: true } },
+    },
   });
 
   return (
