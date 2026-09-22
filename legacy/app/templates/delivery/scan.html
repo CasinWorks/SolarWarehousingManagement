@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Scan Out {{ dr.dr_no }}{% endblock %}
+{% block content %}
+<div class="scan-layout" id="scan-app"
+     data-lookup-url="{{ lookup_url }}"
+     data-mode="out">
+  <div class="page-head">
+    <div>
+      <h1 class="section-title mb-2">Scan Out</h1>
+      <span class="scan-ref">{{ dr.dr_no }}</span>
+      <div class="help mt-2 mb-0">{{ dr.customer_name }}{% if dr.project_site %} · {{ dr.project_site }}{% endif %}</div>
+    </div>
+    <div class="cta-row">
+      <a href="{{ url_for('delivery.dr_pdf', dr_id=dr.id) }}" target="_blank" class="btn btn-outline-danger">PDF</a>
+      <a href="{{ url_for('delivery.view_dr', dr_id=dr.id) }}" class="btn btn-outline-secondary">Done</a>
+    </div>
+  </div>
+
+  <form method="post" id="scan-form">
+    <div class="card mb-3">
+      <div class="card-header">1. Choose bay</div>
+      <div class="card-body">
+        <input type="hidden" name="location_id" id="location_id" value="" required>
+        <div class="bay-grid" role="group" aria-label="Bay selector">
+          {% for l in locations %}
+          <button type="button" class="bay-btn" data-bay-id="{{ l.id }}" data-bay-code="{{ l.code }}">
+            <span class="bay-code">{{ l.code }}</span>
+            <span class="bay-name">{{ l.name }}</span>
+          </button>
+          {% else %}
+          <p class="text-muted mb-0">No bays in catalog. Add locations first.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">2. Scan SKU</div>
+      <div class="card-body">
+        <div class="camera-actions mb-3">
+          <button type="button" id="camera-toggle" class="btn btn-brand btn-touch w-100">
+            <i class="fa-solid fa-camera me-2"></i>Open camera to scan
+          </button>
+          <button type="button" id="camera-stop" class="btn btn-outline-secondary btn-touch w-100" hidden>
+            <i class="fa-solid fa-camera-slash me-2"></i>Close camera
+          </button>
+          <p class="help mb-0">On a phone: allow camera access, then aim at the barcode. (Camera needs HTTPS or localhost.)</p>
+        </div>
+        <div id="camera-wrap" class="camera-wrap" hidden>
+          <div id="camera-reader" class="camera-reader"></div>
+          <p id="camera-status" class="camera-status help mb-0 mt-2"></p>
+        </div>
+        <label class="form-label mt-3" for="sku">Or type / USB scanner</label>
+        <input type="text" name="sku" id="sku" class="form-control scan-sku-input"
+               autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text"
+               placeholder="Barcode / SKU…" enterkeyhint="done">
+        <div id="lookup-panel" class="scan-lookup empty mt-3">Waiting for scan…</div>
+        <div class="row g-3 mt-1">
+          <div class="col-6 col-md-4">
+            <label class="form-label" for="quantity">Qty</label>
+            <input type="number" name="quantity" id="quantity" class="form-control form-control-lg" value="1" min="1">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scan-confirm-bar">
+      <button type="submit" id="confirm-btn" class="btn btn-ok btn-touch w-100" disabled>
+        Confirm &amp; Add Item
+      </button>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Items on {{ dr.dr_no }}</span>
+      <span class="fw-bold">{{ dr.total_qty }} units</span>
+    </div>
+    <div class="card-body">
+      {% if dr.items %}
+      <ul class="scan-lines">
+        {% for it in dr.items|reverse %}
+        <li class="scan-line">
+          <div>
+            <div class="line-main"><span class="mono">{{ it.component.sku }}</span> · {{ it.component.name }}</div>
+            <div class="line-meta">From bay {{ it.location.code }}</div>
+          </div>
+          <div class="line-qty">{{ it.quantity }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-muted mb-0 text-center py-3">No items yet — pick a bay and scan.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="{{ url_for('static', filename='js/scan.js') }}"></script>
+{% endblock %}

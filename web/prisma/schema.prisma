@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// For Vercel production: switch provider to "postgresql" and set DATABASE_URL
+// to a Neon / Vercel Postgres / Supabase connection string.
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  fullName     String
+  passwordHash String
+  role         String    @default("operator") // admin | manager | operator
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  receivings   Receiving[]       @relation("ReceivingCreator")
+  deliveries   DeliveryReceipt[] @relation("DeliveryPreparer")
+  movements    StockMovement[]
+}
+
+model Supplier {
+  id            Int         @id @default(autoincrement())
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  receivings    Receiving[]
+}
+
+model Location {
+  id             Int              @id @default(autoincrement())
+  code           String           @unique
+  name           String
+  zone           String?
+  capacity       Int              @default(0)
+  stockItems     StockItem[]
+  movements      StockMovement[]
+  receivingItems ReceivingItem[]
+  deliveryItems  DeliveryItem[]
+}
+
+model Component {
+  id             Int              @id @default(autoincrement())
+  sku            String           @unique
+  name           String
+  category       String?
+  unit           String           @default("pc")
+  reorderLevel   Int              @default(0)
+  stockItems     StockItem[]
+  movements      StockMovement[]
+  receivingItems ReceivingItem[]
+  deliveryItems  DeliveryItem[]
+}
+
+model StockItem {
+  id          Int       @id @default(autoincrement())
+  componentId Int
+  locationId  Int
+  quantity    Int       @default(0)
+  component   Component @relation(fields: [componentId], references: [id])
+  location    Location  @relation(fields: [locationId], references: [id])
+
+  @@unique([componentId, locationId])
+}
+
+model StockMovement {
+  id           Int       @id @default(autoincrement())
+  componentId  Int
+  locationId   Int
+  movementType String // IN | OUT
+  quantity     Int
+  reference    String?
+  note         String?
+  userId       Int?
+  createdAt    DateTime  @default(now())
+  component    Component @relation(fields: [componentId], references: [id])
+  location     Location  @relation(fields: [locationId], references: [id])
+  user         User?     @relation(fields: [userId], references: [id])
+}
+
+model Receiving {
+  id         Int             @id @default(autoincrement())
+  refNo      String          @unique
+  supplierId Int?
+  poNumber   String?
+  receivedAt DateTime        @default(now())
+  status     String          @default("DRAFT") // DRAFT | POSTED
+  note       String?
+  createdBy  Int?
+  createdAt  DateTime        @default(now())
+  supplier   Supplier?       @relation(fields: [supplierId], references: [id])
+  creator    User?           @relation("ReceivingCreator", fields: [createdBy], references: [id])
+  items      ReceivingItem[]
+}
+
+model ReceivingItem {
+  id          Int       @id @default(autoincrement())
+  receivingId Int
+  componentId Int
+  locationId  Int
+  quantity    Int
+  condition   String    @default("GOOD") // GOOD | DAMAGED
+  receiving   Receiving @relation(fields: [receivingId], references: [id], onDelete: Cascade)
+  component   Component @relation(fields: [componentId], references: [id])
+  location    Location  @relation(fields: [locationId], references: [id])
+}
+
+model DeliveryReceipt {
+  id              Int            @id @default(autoincrement())
+  drNo            String         @unique
+  customerName    String
+  customerAddress String?
+  projectSite     String?
+  deliveryDate    DateTime       @default(now())
+  status          String         @default("DRAFT") // DRAFT | ISSUED
+  note            String?
+  preparedBy      Int?
+  createdAt       DateTime       @default(now())
+  preparer        User?          @relation("DeliveryPreparer", fields: [preparedBy], references: [id])
+  items           DeliveryItem[]
+}
+
+model DeliveryItem {
+  id          Int             @id @default(autoincrement())
+  deliveryId  Int
+  componentId Int
+  locationId  Int
+  quantity    Int
+  delivery    DeliveryReceipt @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  component   Component       @relation(fields: [componentId], references: [id])
+  location    Location        @relation(fields: [locationId], references: [id])
+}

@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #1b2a4a;
+  --navy-deep: #142038;
+  --surface: #f7f5f1;
+  --amber: #f5a623;
+  --ok: #2e8b57;
+  --low: #c94f4f;
+  --muted: #5c6578;
+  --border: #e4e0d8;
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  @apply min-h-screen text-[color:var(--navy)] antialiased;
+  background: var(--surface);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-4 py-3 font-semibold transition min-h-12;
+  }
+  .btn-amber {
+    @apply btn bg-[color:var(--amber)] text-[color:var(--navy-deep)] hover:brightness-95;
+  }
+  .btn-ok {
+    @apply btn bg-[color:var(--ok)] text-white hover:brightness-95;
+  }
+  .btn-outline {
+    @apply btn border border-[color:var(--border)] bg-white text-[color:var(--navy)] hover:bg-[color:var(--surface)];
+  }
+  .card {
+    @apply rounded-xl border border-[color:var(--border)] bg-white;
+  }
+  .input {
+    @apply w-full rounded-[10px] border border-[color:var(--border)] bg-white px-3 py-3 outline-none focus:border-[color:var(--amber)] focus:ring-2 focus:ring-amber-200;
+  }
+  .pill {
+    @apply inline-block rounded-md px-2 py-1 text-xs font-bold;
+  }
+  .pill-ok {
+    @apply pill bg-emerald-50 text-[color:var(--ok)];
+  }
+  .pill-low {
+    @apply pill bg-red-50 text-[color:var(--low)];
+  }
+  .pill-draft {
+    @apply pill bg-amber-50 text-amber-800;
+  }
+}
